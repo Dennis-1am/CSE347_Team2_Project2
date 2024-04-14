@@ -149,8 +149,9 @@ def train_LR(train_images, train_labels, C):
         model (object): logistic regression model
     """
     train_labels = train_labels.ravel()
-    #might want to change solver; reduced max iter for now for execution time but planning to change back after experimenting more
-    model = LR(solver='sag', penalty='l2', C=C, max_iter=100, multi_class='multinomial')
+    # this process is relatively time consuming due to the size of the dataset, which is why max iter is set to 100
+    # i experimented with saga, sag, and newton-cg solvers and accuracies are very similar but newton-cg is more efficient
+    model = LR(solver='newton-cg', penalty='l2', C=C, max_iter=100, multi_class='multinomial')
     train_images_reshaped = train_images.reshape(len(train_images), -1)
     model.fit(train_images_reshaped, train_labels)
     return model
@@ -174,9 +175,10 @@ def evaluate_LR(model, validation_images, validation_labels):
 
     f1 = f1_score(validation_labels, y_pred, average='weighted')
 
-    # still need ROC
+    y_pred_prob = model.predict_proba(validation_images_reshaped)
+    auc = roc_auc_score(validation_labels, y_pred_prob, multi_class='ovr')
 
-    return accuracy, f1
+    return accuracy, f1, auc
 
 def hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C):
     """_summary_
@@ -194,11 +196,23 @@ def hyperparameter_tuning(train_images, validation_images, train_labels, validat
     accuracies = []
     for c in C:
         model = train_LR(train_images, train_labels, c)
-        accuracy, f1 = evaluate_LR(model, validation_images, validation_labels)
+        accuracy, f1, roc = evaluate_LR(model, validation_images, validation_labels)
         accuracies.append(accuracy)
+        #print(accuracy)
     best_C = C[np.argmax(accuracies)]
     return best_C
 
 C = [0.01, 0.1, 1, 10, 100]
 cifar_best_C = hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C)
 print(f'Best C: {cifar_best_C}')
+
+best_model = train_LR(train_images, train_labels, cifar_best_C)
+train_accuracy, train_f1, train_auc = evaluate_LR(best_model, validation_images, validation_labels)
+test_accuracy, test_f1, test_auc = evaluate_LR(best_model, test_images, test_labels)
+
+print(f'Training Accuracy: {train_accuracy}')
+print(f'Training F1: {train_f1}')
+print(f'Training ROC AUC: {train_auc}')
+print(f'Testing Accuracy: {test_accuracy}')
+print(f'Testing F1: {test_f1}')
+print(f'Testing ROC AUC: {test_auc}')
