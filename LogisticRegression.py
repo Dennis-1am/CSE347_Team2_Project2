@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression as LR
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
+import tensorflow as tf
+from tensorflow.keras import datasets
 
 np.random.seed(42)
 
@@ -123,3 +125,80 @@ print(f'Test Accuracy: {np.mean(test_acc)}')
 print(f'Standard Deviation: {np.std(test_acc)}')
 print(f'Test ROC AUC: {np.mean(test_roc_auc)}')
 print(f'Standard Deviation: {np.std(test_roc_auc)}')
+
+##############################################################################################
+
+
+# cifar data 
+(train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
+train_images, test_images = train_images / 255.0, test_images / 255.0
+
+# split cifar training data into training and validation sets
+train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
+
+# training model
+def train_LR(train_images, train_labels, C):
+    """_summary_
+
+    Args:
+       train_images (arraylike): training images
+       train_labels (arraylike): training labels
+        C (arraylike): regularization parameter
+
+    Returns:
+        model (object): logistic regression model
+    """
+    train_labels = train_labels.ravel()
+    #might want to change solver; reduced max iter for now for execution time but planning to change back after experimenting more
+    model = LR(solver='sag', penalty='l2', C=C, max_iter=100, multi_class='multinomial')
+    train_images_reshaped = train_images.reshape(len(train_images), -1)
+    model.fit(train_images_reshaped, train_labels)
+    return model
+
+# evaluating model
+def evaluate_LR(model, validation_images, validation_labels):
+    """_summary_
+    Args:
+        model: trained LR model
+        validation_images (arraylike): validation images
+        validation_labels (arraylike): validation labels
+
+    Returns:
+        accuracy (double): accuracy of the mode
+ 
+    """
+    validation_labels = validation_labels.ravel()
+    validation_images_reshaped = validation_images.reshape(len(validation_images), -1)
+    y_pred = model.predict(validation_images_reshaped)
+    accuracy = accuracy_score(validation_labels, y_pred)
+
+    f1 = f1_score(validation_labels, y_pred, average='weighted')
+
+    # still need ROC
+
+    return accuracy, f1
+
+def hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C):
+    """_summary_
+
+    Args:
+        train_images (arraylike): training images
+        validation_images (arraylike): validation images
+        train_labels (arraylike): training labels
+        validation_labels (arraylike): validation labels
+        C (arraylike): regularization parameter
+
+    Returns:
+        best_C (double): best regularization parameter
+    """
+    accuracies = []
+    for c in C:
+        model = train_LR(train_images, train_labels, c)
+        accuracy, f1 = evaluate_LR(model, validation_images, validation_labels)
+        accuracies.append(accuracy)
+    best_C = C[np.argmax(accuracies)]
+    return best_C
+
+C = [0.01, 0.1, 1, 10, 100]
+cifar_best_C = hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C)
+print(f'Best C: {cifar_best_C}')
