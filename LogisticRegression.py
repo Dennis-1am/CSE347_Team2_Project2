@@ -157,26 +157,27 @@ def train_LR(train_images, train_labels, C):
     return model
 
 # evaluating model
-def evaluate_LR(model, validation_images, validation_labels):
+def evaluate_LR(model, images, labels):
     """_summary_
     Args:
         model: trained LR model
-        validation_images (arraylike): validation images
-        validation_labels (arraylike): validation labels
+        images (arraylike): image data
+        labels (arraylike): labels
 
     Returns:
-        accuracy (double): accuracy of the mode
- 
+        accuracy (double): accuracy of the model
+        F1 (double): F1 of the model
+        AUC (double): AUC of the model
     """
-    validation_labels = validation_labels.ravel()
-    validation_images_reshaped = validation_images.reshape(len(validation_images), -1)
-    y_pred = model.predict(validation_images_reshaped)
-    accuracy = accuracy_score(validation_labels, y_pred)
+    labels = labels.ravel()
+    images_reshaped = images.reshape(len(images), -1)
+    y_pred = model.predict(images_reshaped)
+    accuracy = accuracy_score(labels, y_pred)
 
-    f1 = f1_score(validation_labels, y_pred, average='weighted')
+    f1 = f1_score(labels, y_pred, average='weighted')
 
-    y_pred_prob = model.predict_proba(validation_images_reshaped)
-    auc = roc_auc_score(validation_labels, y_pred_prob, multi_class='ovr')
+    y_pred_prob = model.predict_proba(images_reshaped)
+    auc = roc_auc_score(labels, y_pred_prob, multi_class='ovr')
 
     return accuracy, f1, auc
 
