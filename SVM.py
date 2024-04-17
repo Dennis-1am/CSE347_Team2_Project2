@@ -132,6 +132,7 @@ def main(train_data, test_data, best_C=best_C, best_K=best_K):
     model.fit(train_data.drop(columns=1), train_data[1])
     model1.fit(train_data.drop(columns=1), train_data[1])
 
+    
     for _ in range(n):
         test_data_i = test_data.sample(frac=0.8) # 80% test data randomly sampled
         y_pred = model.predict(test_data_i.drop(columns=1))
@@ -151,5 +152,6 @@ def main(train_data, test_data, best_C=best_C, best_K=best_K):
 
 print('Iyer Data Results (SVM)')
 main(iyer_train, iyer_test, best_C, best_K)
+
 print('Cho Data Results (SVM)')
 main(cho_train, cho_test, best_C, best_K)
