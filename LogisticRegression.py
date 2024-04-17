@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression as LR
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 import tensorflow as tf
-from tensorflow.keras import datasets
+from keras import datasets
+# from tensorflow.keras import datasets
 
 np.random.seed(42)
 
@@ -22,7 +23,7 @@ cho_data = pd.read_csv('data/cho.txt', sep='\t', header=None)
 cho_data = cho_data[cho_data[1] != -1]
 
 # split data into training and testing sets
-train_data = cho_data.sample(frac=0.7)
+train_data = cho_data.sample(frac=0.8)
 test_data = cho_data.drop(train_data.index)
 
 # train logistic regression and k-fold cross validation on training data to find best hyperparameters
@@ -47,7 +48,7 @@ def train_LR(data, C):
     return model
 # Hyperparameter tuning for Logistic Regression C parameter using 3-fold cross validation
 
-def k_fold(data, C):
+def k_fold(data, C, n):
     """_summary_
     Args:
         data (arraylike / matrixlike): train data or test data
@@ -59,14 +60,23 @@ def k_fold(data, C):
     Note: 
         DOES NOT RETURN AUC SCORE NOR F1 SCORE
     """
-    train_data = data.sample(frac=0.8) # 80% training data randomly sampled
-    X_train, X_val = train_test_split(train_data, test_size=0.2) # 80% training and 20% validation split training data into test and validation set for a k-fold cross validation
+    model = LR(solver='liblinear', penalty='l2', C=C, max_iter=1000, multi_class='ovr')
     
-    model = train_LR(X_train, C)
-    y_pred = model.predict(X_val.drop(columns=1))
-    accuracy = accuracy_score(X_val[1], y_pred)
+    kf = KFold(n_splits=n, shuffle=True, random_state=42)
+    kf.get_n_splits(data)
     
-    return accuracy
+    accuracy = []
+    
+    for train_index, test_index in kf.split(data):
+        train_data = data.iloc[train_index]
+        test_data = data.iloc[test_index]
+        
+        model.fit(train_data.drop(columns=1), train_data[1])
+        y_pred = model.predict(test_data.drop(columns=1))
+        
+        accuracy.append(accuracy_score(test_data[1], y_pred))
+    
+    return np.mean(accuracy)
 
 def hyperparameter_tuning(data, C):
     """_summary_
@@ -80,7 +90,7 @@ def hyperparameter_tuning(data, C):
     """
     accuracies = []
     for c in C:
-        accuracy = k_fold(data, c)
+        accuracy = k_fold(data, c, 3)
         accuracies.append(accuracy)
     best_C = C[np.argmax(accuracies)]
     return best_C
@@ -94,24 +104,29 @@ print(f'Best C: {best_C}')
 n = 3
 train_acc = []
 train_roc_auc = []
+train_f1 = []
 for i in range(n):
-    train_data_i = train_data.sample(frac=0.8) # 80% training data randomly sampled
-    test_data_i = train_data.drop(train_data_i.index) # 20% test data
+    train_data_i, test_data_i = train_test_split(train_data, test_size=0.2, stratify=train_data[1])
     model = train_LR(train_data_i, best_C)
     y_pred = model.predict(test_data_i.drop(columns=1))
     y_pred_prob = model.predict_proba(test_data_i.drop(columns=1))
     
     train_acc.append(accuracy_score(test_data_i[1], y_pred))
     train_roc_auc.append(roc_auc_score(test_data_i[1], y_pred_prob, multi_class='ovr'))
+    train_f1.append(f1_score(test_data_i[1], y_pred, average='weighted'))
     
 print(f'Training Accuracy: {np.mean(train_acc)}')
 print(f'Standard Deviation: {np.std(train_acc)}')
 print(f'Training ROC AUC: {np.mean(train_roc_auc)}')
 print(f'Standard Deviation: {np.std(train_roc_auc)}')
+print(f'Training F1: {np.mean(train_f1)}')
+print(f'Standard Deviation: {np.std(train_f1)}')
+print('')
 
-# test the model on the test data
+# # test the model on the test data
 test_acc = []
 test_roc_auc = []
+test_f1 = []
 for i in range(n):
     model = train_LR(train_data, best_C)
     test_data_i = test_data.sample(frac=0.8) # 80% test data randomly sampled
@@ -120,18 +135,20 @@ for i in range(n):
     
     test_acc.append(accuracy_score(test_data_i[1], y_pred))
     test_roc_auc.append(roc_auc_score(test_data_i[1], y_pred_prob, multi_class='ovr'))
+    test_f1.append(f1_score(test_data_i[1], y_pred, average='weighted'))
 
 print(f'Test Accuracy: {np.mean(test_acc)}')
 print(f'Standard Deviation: {np.std(test_acc)}')
 print(f'Test ROC AUC: {np.mean(test_roc_auc)}')
 print(f'Standard Deviation: {np.std(test_roc_auc)}')
+print(f'Test F1: {np.mean(test_f1)}')
+print(f'Standard Deviation: {np.std(test_f1)}')
 
 ##############################################################################################
 
-
 # cifar data 
-(train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
-train_images, test_images = train_images / 255.0, test_images / 255.0
+(train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data() 
+train_images, test_images = train_images / 255.0, test_images / 255.0 
 
 # split cifar training data into training and validation sets
 train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
