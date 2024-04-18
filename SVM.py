@@ -3,7 +3,8 @@ import pandas as pd
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
-
+from tensorflow.keras import datasets
+from sklearn.decomposition import PCA
 np.random.seed(42)
 
 # Load the Cho and Iyer Data
@@ -155,3 +156,68 @@ main(iyer_train, iyer_test, best_C, best_K)
 
 print('Cho Data Results (SVM)')
 main(cho_train, cho_test, best_C, best_K)
+
+##############################################################################################
+
+# cifar data 
+(train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data() 
+train_images, test_images = train_images / 255.0, test_images / 255.0 
+
+# split cifar training data into training and validation sets
+train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
+
+# Reshape images
+train_images = train_images.reshape(len(train_images), -1)
+test_images = test_images.reshape(len(test_images), -1)
+validation_images = validation_images.reshape(len(validation_images), -1)
+
+# Apply PCA
+pca = PCA(n_components=10, svd_solver='randomized', copy=False) 
+train_images = pca.fit_transform(train_images)
+validation_images = pca.transform(validation_images)
+test_images = pca.transform(test_images)
+print("PCA done")
+
+# Training model
+def train_SVM(train_images, train_labels, C):
+    train_labels = train_labels.ravel()
+    model = SVC(kernel='linear', C=C, probability=True)
+    model.fit(train_images, train_labels)
+    return model
+
+# Evaluating model
+def evaluate_SVM(model, images, labels):
+    labels = labels.ravel()
+    y_pred = model.predict(images)
+    accuracy = accuracy_score(labels, y_pred)
+    f1 = f1_score(labels, y_pred, average='weighted')
+    y_pred_prob = model.predict_proba(images)
+    auc = roc_auc_score(labels, y_pred_prob, multi_class='ovr')
+    return accuracy, f1, auc
+
+def hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C):
+    accuracies = []
+    for c in C:
+        model = train_SVM(train_images, train_labels, c)
+        accuracy, f1, auc = evaluate_SVM(model, validation_images, validation_labels)
+        accuracies.append(accuracy)
+    best_C = C[np.argmax(accuracies)]
+    return best_C
+
+print('CIFAR-10 Data Results (SVM)')
+C = [0.01, 0.1, 1, 10, 100]
+cifar_best_C = hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C)
+print(f'Best C: {cifar_best_C}')
+
+best_model = train_SVM(train_images, train_labels, cifar_best_C)
+print("training done")
+train_accuracy, train_f1, train_auc = evaluate_SVM(best_model, validation_images, validation_labels)
+print("training accuracy done")
+test_accuracy, test_f1, test_auc = evaluate_SVM(best_model, test_images, test_labels)
+print("test accuracy done")
+print(f'Training Accuracy: {train_accuracy}')
+print(f'Training F1: {train_f1}')
+print(f'Training ROC AUC: {train_auc}')
+print(f'Testing Accuracy: {test_accuracy}')
+print(f'Testing F1: {test_f1}')
+print(f'Testing ROC AUC: {test_auc}')

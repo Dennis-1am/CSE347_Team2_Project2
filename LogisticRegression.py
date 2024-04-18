@@ -160,7 +160,7 @@ def train_LR(train_images, train_labels, C):
     Args:
        train_images (arraylike): training images
        train_labels (arraylike): training labels
-        C (arraylike): regularization parameter
+       C (arraylike): regularization parameter
 
     Returns:
         model (object): logistic regression model
