@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 import tensorflow as tf
 from keras import datasets
-# from tensorflow.keras import datasets
+from sklearn.decomposition import PCA
 
 np.random.seed(42)
 
@@ -153,6 +153,12 @@ train_images, test_images = train_images / 255.0, test_images / 255.0
 # split cifar training data into training and validation sets
 train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
 
+pca = PCA(n_components=10)
+train_images = pca.fit_transform(train_images.reshape(len(train_images), -1))
+test_images = pca.fit_transform(test_images.reshape(len(test_images), -1))
+validation_images = pca.fit_transform(validation_images.reshape(len(validation_images), -1))
+
+
 # training model
 def train_LR(train_images, train_labels, C):
     """_summary_
@@ -169,8 +175,8 @@ def train_LR(train_images, train_labels, C):
     # this process is relatively time consuming due to the size of the dataset, which is why max iter is set to 100
     # i experimented with saga, sag, and newton-cg solvers and accuracies are very similar but newton-cg is more efficient
     model = LR(solver='newton-cg', penalty='l2', C=C, max_iter=100, multi_class='multinomial')
-    train_images_reshaped = train_images.reshape(len(train_images), -1)
-    model.fit(train_images_reshaped, train_labels)
+    # train_images = train_images.reshape(len(train_images), -1)
+    model.fit(train_images, train_labels)
     return model
 
 # evaluating model
@@ -187,13 +193,13 @@ def evaluate_LR(model, images, labels):
         AUC (double): AUC of the model
     """
     labels = labels.ravel()
-    images_reshaped = images.reshape(len(images), -1)
-    y_pred = model.predict(images_reshaped)
+    # images = images.reshape(len(images), -1)
+    y_pred = model.predict(images)
     accuracy = accuracy_score(labels, y_pred)
 
     f1 = f1_score(labels, y_pred, average='weighted')
 
-    y_pred_prob = model.predict_proba(images_reshaped)
+    y_pred_prob = model.predict_proba(images)
     auc = roc_auc_score(labels, y_pred_prob, multi_class='ovr')
 
     return accuracy, f1, auc
@@ -222,6 +228,7 @@ def hyperparameter_tuning(train_images, validation_images, train_labels, validat
 
 C = [0.01, 0.1, 1, 10, 100]
 cifar_best_C = hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C)
+print('')
 print(f'Best C: {cifar_best_C}')
 
 best_model = train_LR(train_images, train_labels, cifar_best_C)
