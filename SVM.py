@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
+from keras import datasets # used to import image data
+
 
 np.random.seed(42)
 
@@ -87,13 +90,13 @@ def hyperparameter_tuning(data, C, kernel):
 C = [0.01, 0.1, 1, 10, 100]
 kernel = ['rbf', 'linear', 'poly', 'sigmoid']
 
-best_C, best_K = hyperparameter_tuning(iyer_train, C, kernel)
+# best_C, best_K = hyperparameter_tuning(iyer_train, C, kernel)
 
-print(f'Best C: {best_C}', f'Best Kernel: {best_K}', sep='\n')
+# print(f'Best C: {best_C}', f'Best Kernel: {best_K}', sep='\n')
 
 ## Train the model with the best hyperparameter and simulate 3 times to get the average accuracy
 
-def main(train_data, test_data, best_C=best_C, best_K=best_K):
+def main(train_data, test_data, best_C, best_K):
     n = 3
     train_acc = []
     train_roc_auc = []
@@ -122,7 +125,7 @@ def main(train_data, test_data, best_C=best_C, best_K=best_K):
     print(f'Standard Deviation: {np.std(train_f1)}')
     print('')
 
-    ## test the model on the test data
+    # test the model on the test data
 
     test_acc = []
     test_roc_auc = []
@@ -131,7 +134,6 @@ def main(train_data, test_data, best_C=best_C, best_K=best_K):
     model1 = SVC(C=best_C, kernel=best_K, probability=True)
     model.fit(train_data.drop(columns=1), train_data[1])
     model1.fit(train_data.drop(columns=1), train_data[1])
-
     
     for _ in range(n):
         test_data_i = test_data.sample(frac=0.8) # 80% test data randomly sampled
@@ -149,9 +151,3 @@ def main(train_data, test_data, best_C=best_C, best_K=best_K):
     print(f'Test F1: {np.mean(test_f1)}')
     print(f'Standard Deviation: {np.std(test_f1)}')
     print('')
-
-print('Iyer Data Results (SVM)')
-main(iyer_train, iyer_test, best_C, best_K)
-
-print('Cho Data Results (SVM)')
-main(cho_train, cho_test, best_C, best_K)

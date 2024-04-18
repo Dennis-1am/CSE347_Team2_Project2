@@ -46,8 +46,8 @@ def train_LR(data, C):
     model = LR(solver='liblinear', penalty='l2', C=C, max_iter=1000, multi_class='ovr')
     model.fit(data.drop(columns=1), data[1])
     return model
-# Hyperparameter tuning for Logistic Regression C parameter using 3-fold cross validation
 
+# Hyperparameter tuning for Logistic Regression C parameter using 3-fold cross validation
 def k_fold(data, C, n):
     """_summary_
     Args:
