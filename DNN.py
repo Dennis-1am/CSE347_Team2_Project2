@@ -11,20 +11,25 @@ from tensorflow.keras import datasets, layers, models
 train_images, test_images = train_images / 255.0, test_images / 255.0
 # split cifar training data into training and validation sets
 train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
+# reshaping data to be compatible with DNN
+train_images = train_images.reshape(len(train_images), -1)
+validation_images = validation_images.reshape(len(validation_images), -1)
+test_images = test_images.reshape(len(test_images), -1)
 
 def DNN_model(num_layers):
     """_summary_
 
     Args:
-       num_layers (int): number of layers to experiment with for DNN model
+       num_layers (int): number of hidden layers to experiment with for DNN model
 
     Returns:
-        model (object): CNN model
+        model (object): DNN model
     """
     model = models.Sequential()
+    model.add(layers.Dense(64, activation='relu'))
     for i in range(num_layers):
         model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Flatten())
+    model.add(layers.Flatten()) 
     model.add(layers.Dense(10, activation= 'softmax'))
     return model
 
@@ -32,14 +37,14 @@ def train_model(model, train_images, validation_images, train_labels, validation
     """_summary_
 
     Args:
-       model (object): CNN model
+       model (object): DNN model
        train_images (arraylike): training images
        validation_images (arraylike): validation images
        train_labels (arraylike): training labels
        validation_labels (arraylike): validation labels
 
     Returns:
-        model (object): CNN model
+        model (object): DNN model
         history (object): training history
     """
     # Compile/train the model
@@ -77,17 +82,17 @@ def hyperparameter_tuning(layers_list, train_images, validation_images, train_la
     """_summary_
 
     Args:
-       layers_list (list): list of number of layers for experimentation
+       layers_list (list): list of number of hidden layers for experimentation
        train_images (arraylike): training images
        validation_images (arraylike): training images
        train_labels (arraylike): training labels
        validation_labels (arraylike): training labels
 
     Returns:
-        best_num_layers (int): number of convolution layers that resulted in greatest validation accuracy
-        best_model (object): CNN model with best performance
+        best_num_layers (int): number of hidden layers that resulted in greatest validation accuracy
+        best_model (object): DNN model with best performance
     """
-    # experimenting with the amount of layers
+    # experimenting with the amount of hidden layers
     best_accuracy = 0
     best_num_layers = None
     best_model = None
@@ -104,7 +109,7 @@ def hyperparameter_tuning(layers_list, train_images, validation_images, train_la
 
 layers_list = [1, 2, 3, 4]
 best_num_layers, best_model = hyperparameter_tuning(layers_list, train_images, validation_images, train_labels, validation_labels)
-print(f'Best Number of Layers: {best_num_layers}')
+print(f'Best Number of Hidden Layers: {best_num_layers}')
 
 
 # best_model = CNN_model(best_num_layers)
