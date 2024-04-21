@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 from tensorflow.keras import datasets
 from sklearn.decomposition import PCA
+from sklearn.calibration import CalibratedClassifierCV
 # from sklearn.preprocessing import StandardScaler
 np.random.seed(42)
 
@@ -174,24 +175,23 @@ train_images = train_images.reshape(len(train_images), -1)
 test_images = test_images.reshape(len(test_images), -1)
 validation_images = validation_images.reshape(len(validation_images), -1)
 
-# Scale data
-# scaler = StandardScaler()
-# train_images = scaler.fit_transform(train_images)
-# validation_images = scaler.transform(validation_images)
-# test_images = scaler.transform(test_images)
-
 # Apply PCA
-pca = PCA(n_components=0.9) 
+pca = PCA(0.9) 
 train_images = pca.fit_transform(train_images)
 validation_images = pca.transform(validation_images)
 test_images = pca.transform(test_images)
 
-# Training model using LinearSVC
 def train_SVM(train_images, train_labels, C):
     train_labels = train_labels.ravel()
-    model = LinearSVC(C=C, dual=False)
-    model.fit(train_images, train_labels)
-    return model
+    # Train the LinearSVC because SVC() performs poorly on large datasets
+    svm = LinearSVC(C=C, dual=False, max_iter=10000)
+    svm.fit(train_images, train_labels)
+    
+    # Calibrate the classifier
+    calibrated_svm = CalibratedClassifierCV(svm, method='sigmoid', cv='prefit')
+    calibrated_svm.fit(train_images, train_labels)
+    
+    return calibrated_svm
 
 # Evaluating model
 def evaluate_SVM(model, images, labels):
@@ -199,14 +199,16 @@ def evaluate_SVM(model, images, labels):
     y_pred = model.predict(images)
     accuracy = accuracy_score(labels, y_pred)
     f1 = f1_score(labels, y_pred, average='weighted')
-    # LinearSVC doesn't support predict_proba directly, alternative method needed for ROC AUC if required
-    return accuracy, f1
+    probabilities = model.predict_proba(images)  # Use probabilities instead of decision_function
+    auc = roc_auc_score(labels, probabilities, multi_class='ovr')
+
+    return accuracy, f1, auc
 
 def hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C):
     accuracies = []
     for c in C:
         model = train_SVM(train_images, train_labels, c)
-        accuracy, f1 = evaluate_SVM(model, validation_images, validation_labels)
+        accuracy, f1, auc = evaluate_SVM(model, validation_images, validation_labels)
         accuracies.append(accuracy)
     best_C = C[np.argmax(accuracies)]
     return best_C
@@ -217,11 +219,11 @@ cifar_best_C = hyperparameter_tuning(train_images, validation_images, train_labe
 print(f'Best C: {cifar_best_C}')
 
 best_model = train_SVM(train_images, train_labels, cifar_best_C)
-train_accuracy, train_f1 = evaluate_SVM(best_model, validation_images, validation_labels)
-test_accuracy, test_f1 = evaluate_SVM(best_model, test_images, test_labels)
+train_accuracy, train_f1, train_auc = evaluate_SVM(best_model, validation_images, validation_labels)
+test_accuracy, test_f1, test_auc = evaluate_SVM(best_model, test_images, test_labels)
 print(f'Training Accuracy: {train_accuracy}')
 print(f'Training F1: {train_f1}')
-# print(f'Training ROC AUC: {train_auc}')
+print(f'Training ROC AUC: {train_auc}')
 print(f'Testing Accuracy: {test_accuracy}')
 print(f'Testing F1: {test_f1}')
-# print(f'Testing ROC AUC: {test_auc}')
+print(f'Testing ROC AUC: {test_auc}')
