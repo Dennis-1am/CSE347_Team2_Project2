@@ -2,13 +2,11 @@ import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
-from sklearn.kernel_approximation import Nystroem
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 from tensorflow.keras import datasets
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.multiclass import OneVsRestClassifier
+# from sklearn.preprocessing import StandardScaler
 np.random.seed(42)
 
 # Load the Cho and Iyer Data

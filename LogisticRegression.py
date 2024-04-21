@@ -228,7 +228,7 @@ def hyperparameter_tuning(train_images, validation_images, train_labels, validat
 
 C = [0.01, 0.1, 1, 10, 100]
 cifar_best_C = hyperparameter_tuning(train_images, validation_images, train_labels, validation_labels, C)
-print('')
+print('CIFAR-10 Data Results (LR)')
 print(f'Best C: {cifar_best_C}')
 
 best_model = train_LR(train_images, train_labels, cifar_best_C)
