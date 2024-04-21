@@ -176,6 +176,7 @@ test_images = test_images.reshape(len(test_images), -1)
 validation_images = validation_images.reshape(len(validation_images), -1)
 
 # Apply PCA
+#PCA Source: https://drive.google.com/file/d/1ieC6zNfuZxYmt9vLJ26o89RKu6ZR7j5O/view
 pca = PCA(0.9) 
 train_images = pca.fit_transform(train_images)
 validation_images = pca.transform(validation_images)
@@ -188,6 +189,8 @@ def train_SVM(train_images, train_labels, C):
     svm.fit(train_images, train_labels)
     
     # Calibrate the classifier
+    # source for using LinearSVC and CalibratedClassifierCV for SVM that performs well on large data, and also allows for ROC AUC metric
+    # https://stackoverflow.com/questions/26478000/converting-linearsvcs-decision-function-to-probabilities-scikit-learn-python
     calibrated_svm = CalibratedClassifierCV(svm, method='sigmoid', cv='prefit')
     calibrated_svm.fit(train_images, train_labels)
     

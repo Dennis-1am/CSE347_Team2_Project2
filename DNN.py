@@ -14,6 +14,7 @@ def DNN_model(input_shape, num_classes, num_layers):
     for _ in range(num_layers - 1):
         model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dense(num_classes, activation='softmax'))
+    #ChatGPT helped optimize the model
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 

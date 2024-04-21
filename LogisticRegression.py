@@ -153,6 +153,7 @@ train_images, test_images = train_images / 255.0, test_images / 255.0
 # split cifar training data into training and validation sets
 train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
 
+#PCA Source: https://drive.google.com/file/d/1ieC6zNfuZxYmt9vLJ26o89RKu6ZR7j5O/view
 pca = PCA(n_components=10)
 train_images = pca.fit_transform(train_images.reshape(len(train_images), -1))
 test_images = pca.fit_transform(test_images.reshape(len(test_images), -1))
