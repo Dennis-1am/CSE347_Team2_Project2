@@ -7,8 +7,10 @@ import tensorflow as tf
 from tensorflow.keras import datasets, layers, models
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.utils import to_categorical
+# Used Deep Learning Intro lecture slides as a resource on NN's in general and their features
 
 def DNN_model(input_shape, num_classes, num_layers):
+    # Used this source to learn about DNNs in python: https://kavita-ganesan.com/neural-network-intro/
     model = models.Sequential()
     model.add(layers.Dense(64, activation='relu', input_shape=(input_shape,)))
     for _ in range(num_layers - 1):
@@ -57,7 +59,7 @@ cho_features, cho_labels = load_and_preprocess_data('data/cho.txt')
 # zero-indexing
 iyer_labels = iyer_labels - 1
 cho_labels = cho_labels - 1
-layers_list = [1, 2, 3, 4]
+layers_list = [3, 4, 5, 6]
 print('Tuning number of layers for Iyer Data')
 best_iyer_layers, iyer_accuracy = hyperparameter_tuning_dnn(iyer_features, iyer_labels, len(np.unique(iyer_labels)), 3, layers_list)
 print(f'Best number of layers for Iyer Data: {best_iyer_layers}, with K-fold accuracy: {iyer_accuracy:.4f}')
@@ -67,12 +69,12 @@ best_cho_layers, cho_accuracy = hyperparameter_tuning_dnn(cho_features, cho_labe
 print(f'Best number of layers for Cho Data: {best_cho_layers}, with K-fold accuracy: {cho_accuracy:.4f}')
 ## Train the model with the best hyperparameter and simulate 3 times to get the average accuracy
 
-def evaluate_model(model, images, labels):
+def evaluate_model(model, features, labels):
     """_summary_
 
     Args:
        model (object): DNN model
-       images (arraylike): image data
+       images (arraylike): feature/image data
        labels (arraylike): labels
 
     Returns:
@@ -80,7 +82,7 @@ def evaluate_model(model, images, labels):
         F1 (double): F1 of the model
         AUC (double): AUC of the model
     """
-    y_pred_probabilities = model.predict(images)
+    y_pred_probabilities = model.predict(features)
     y_pred_labels = np.argmax(y_pred_probabilities, axis=1)
     accuracy = accuracy_score(labels, y_pred_labels)
 
@@ -143,12 +145,15 @@ main(cho_trainX, cho_trainY, cho_testX, cho_testY, best_cho_layers)
 
 
 
-# cifar data 
+# Cifar-10 Data 
+
+# Used lecture 16 CNN code demo for help with loading Cifar data
+# Download and normalize Cifar data
 (train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
 train_images, test_images = train_images / 255.0, test_images / 255.0
-# split cifar training data into training and validation sets
+# Split cifar training data into training and validation sets
 train_images, validation_images, train_labels, validation_labels = train_test_split(train_images, train_labels, train_size=0.9)
-# reshaping data to be compatible with DNN
+# Reshaping data to be compatible with DNN
 train_images = train_images.reshape(len(train_images), -1)
 validation_images = validation_images.reshape(len(validation_images), -1)
 test_images = test_images.reshape(len(test_images), -1)
@@ -167,10 +172,8 @@ def train_model(model, train_images, validation_images, train_labels, validation
         model (object): DNN model
         history (object): training history
     """
-    # Compile/train the model
-    model.compile(optimizer='adam',
-                    loss='sparse_categorical_crossentropy',
-                    metrics=['accuracy'])
+    # Train the model with cifar data
+    # Used lecture 16 CNN code demo to help with the training of the model 
     history = model.fit(train_images, train_labels, batch_size=64, epochs=1,
                     validation_data=(validation_images, validation_labels))
     return model, history
@@ -189,7 +192,7 @@ def hyperparameter_tuning(layers_list, train_images, validation_images, train_la
         best_num_layers (int): number of hidden layers that resulted in greatest validation accuracy
         best_model (object): DNN model with best performance
     """
-    # experimenting with the amount of hidden layers
+    # Experimenting with the amount of hidden layer
     best_accuracy = 0
     best_num_layers = None
     best_model = None
@@ -204,12 +207,10 @@ def hyperparameter_tuning(layers_list, train_images, validation_images, train_la
             best_model = model
     return best_num_layers, best_model
 
+# Executing hyperparameter tuning for the number hidden layers
 best_num_layers, best_model = hyperparameter_tuning(layers_list, train_images, validation_images, train_labels, validation_labels)
 print(f'(CIFAR-10) Best Number of Hidden Layers: {best_num_layers}')
-
-
-# best_model = CNN_model(best_num_layers)
-# train_model(best_model, train_images, validation_images, train_labels, validation_labels)
+# Getting evaluation  metrics for best model
 train_accuracy, train_f1, train_auc = evaluate_model(best_model, validation_images, validation_labels)
 test_accuracy, test_f1, test_auc = evaluate_model(best_model, test_images, test_labels)
 
