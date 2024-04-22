@@ -174,7 +174,7 @@ def train_model(model, train_images, validation_images, train_labels, validation
     """
     # Train the model with cifar data
     # Used lecture 16 CNN code demo to help with the training of the model 
-    history = model.fit(train_images, train_labels, batch_size=64, epochs=1,
+    history = model.fit(train_images, train_labels, batch_size=64, epochs=5,
                     validation_data=(validation_images, validation_labels))
     return model, history
 
