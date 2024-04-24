@@ -59,7 +59,7 @@ cho_features, cho_labels = load_and_preprocess_data('data/cho.txt')
 # zero-indexing
 iyer_labels = iyer_labels - 1
 cho_labels = cho_labels - 1
-layers_list = [2, 3, 4, 5]
+layers_list = [3, 4, 5, 6]
 print('Tuning number of layers for Iyer Data')
 best_iyer_layers, iyer_accuracy = hyperparameter_tuning_dnn(iyer_features, iyer_labels, len(np.unique(iyer_labels)), 3, layers_list)
 print(f'Best number of layers for Iyer Data: {best_iyer_layers}, with K-fold accuracy: {iyer_accuracy:.4f}')
