@@ -1,4 +1,4 @@
-# init code
+# Imports
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, KFold
@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.utils import to_categorical
 # Used Deep Learning Intro lecture slides as a resource on NN's in general and their features
 
+# DNN model function
 def DNN_model(input_shape, num_classes, num_layers):
     # Used this source to learn about DNNs in python: https://kavita-ganesan.com/neural-network-intro/
     model = models.Sequential()
@@ -20,6 +21,9 @@ def DNN_model(input_shape, num_classes, num_layers):
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
+# Iyer and Cho data:
+
+# Loading and preprocessing
 def load_and_preprocess_data(filepath):
     data = pd.read_csv(filepath, sep='\t', header=None)
     data = data[data[1] != -1]
@@ -28,7 +32,8 @@ def load_and_preprocess_data(filepath):
     scaler = StandardScaler()
     features = scaler.fit_transform(features)
     return features, labels
-# use KFold cross validation to tune the hyperparameter, as required in instructions
+
+# Use KFold cross validation to tune the hyperparameter, as required in instructions
 def hyperparameter_tuning_dnn(features, labels, num_classes, num_folds, layer_options):
     kf = KFold(n_splits=num_folds, shuffle=True, random_state=42)
     best_num_layers = None
@@ -53,7 +58,7 @@ def hyperparameter_tuning_dnn(features, labels, num_classes, num_folds, layer_op
         print(f'Layers: {num_layers}, Mean K-fold Accuracy: {mean_accuracy:.4f}')
     return best_num_layers, best_accuracy
 
-# Main execution
+# Main execution for Iyer and Cho 
 iyer_features, iyer_labels = load_and_preprocess_data('data/iyer.txt')
 cho_features, cho_labels = load_and_preprocess_data('data/cho.txt')
 # zero-indexing
@@ -67,8 +72,8 @@ print(f'Best number of layers for Iyer Data: {best_iyer_layers}, with K-fold acc
 print('Tuning number of layers for Cho Data')
 best_cho_layers, cho_accuracy = hyperparameter_tuning_dnn(cho_features, cho_labels, len(np.unique(cho_labels)), 3, layers_list)
 print(f'Best number of layers for Cho Data: {best_cho_layers}, with K-fold accuracy: {cho_accuracy:.4f}')
-## Train the model with the best hyperparameter and simulate 3 times to get the average accuracy
 
+# Train the model with the best hyperparameter and simulate 3 times to get the average accuracy
 def evaluate_model(model, features, labels):
     """_summary_
 
@@ -159,19 +164,6 @@ validation_images = validation_images.reshape(len(validation_images), -1)
 test_images = test_images.reshape(len(test_images), -1)
 
 def train_model(model, train_images, validation_images, train_labels, validation_labels):
-    """_summary_
-
-    Args:
-       model (object): DNN model
-       train_images (arraylike): training images
-       validation_images (arraylike): validation images
-       train_labels (arraylike): training labels
-       validation_labels (arraylike): validation labels
-
-    Returns:
-        model (object): DNN model
-        history (object): training history
-    """
     # Train the model with cifar data
     # Used lecture 16 CNN code demo to help with the training of the model 
     history = model.fit(train_images, train_labels, batch_size=64, epochs=5,
@@ -179,20 +171,7 @@ def train_model(model, train_images, validation_images, train_labels, validation
     return model, history
 
 def hyperparameter_tuning(layers_list, train_images, validation_images, train_labels, validation_labels):
-    """_summary_
-
-    Args:
-       layers_list (list): list of number of hidden layers for experimentation
-       train_images (arraylike): training images
-       validation_images (arraylike): training images
-       train_labels (arraylike): training labels
-       validation_labels (arraylike): training labels
-
-    Returns:
-        best_num_layers (int): number of hidden layers that resulted in greatest validation accuracy
-        best_model (object): DNN model with best performance
-    """
-    # Experimenting with the amount of hidden layer
+    # Tuning the amount of hidden layers for Cifar-10 dataset
     best_accuracy = 0
     best_num_layers = None
     best_model = None
