@@ -13,7 +13,7 @@ from tensorflow.keras.utils import to_categorical
 def DNN_model(input_shape, num_classes, num_layers):
     # Used this source to learn about DNNs in python: https://kavita-ganesan.com/neural-network-intro/
     model = models.Sequential()
-    model.add(layers.Dense(64, activation='relu', input_shape=(input_shape,)))
+    model.add(layers.Dense(64, input_shape=(input_shape,)))
     for _ in range(num_layers):
         model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dense(num_classes, activation='softmax'))
