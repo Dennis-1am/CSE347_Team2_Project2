@@ -73,20 +73,8 @@ print('Tuning number of layers for Cho Data')
 best_cho_layers, cho_accuracy = hyperparameter_tuning_dnn(cho_features, cho_labels, len(np.unique(cho_labels)), 3, layers_list)
 print(f'Best number of layers for Cho Data: {best_cho_layers}, with K-fold accuracy: {cho_accuracy:.4f}')
 
-# Train the model with the best hyperparameter and simulate 3 times to get the average accuracy
+# Model evaluation
 def evaluate_model(model, features, labels):
-    """_summary_
-
-    Args:
-       model (object): DNN model
-       images (arraylike): feature/image data
-       labels (arraylike): labels
-
-    Returns:
-        accuracy (double): accuracy of the model
-        F1 (double): F1 of the model
-        AUC (double): AUC of the model
-    """
     y_pred_probabilities = model.predict(features)
     y_pred_labels = np.argmax(y_pred_probabilities, axis=1)
     accuracy = accuracy_score(labels, y_pred_labels)
@@ -97,6 +85,7 @@ def evaluate_model(model, features, labels):
 
     return accuracy, f1, auc
 
+# Train the model with the best hyperparameter and simulate 3 times to get the average accuracy
 def main(train_features, train_labels, test_features, test_labels, best_num_layers):
     n = 3
     results = {
