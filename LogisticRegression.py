@@ -11,20 +11,20 @@ np.random.seed(42)
 
 # preprocessing data
 # removing rows with outliers (label = -1)
-# iyer_data = pd.read_csv('data/iyer.txt', sep='\t', header=None)
-# iyer_data = iyer_data[iyer_data[1] != -1]
+iyer_data = pd.read_csv('data/iyer.txt', sep='\t', header=None)
+iyer_data = iyer_data[iyer_data[1] != -1]
 
-# # split data into training and tes ting sets
-# train_data = iyer_data.sample(frac=0.8)
-# test_data = iyer_data.drop(train_data.index)
+# split data into training and tes ting sets
+train_data = iyer_data.sample(frac=0.8)
+test_data = iyer_data.drop(train_data.index)
 
-# cho data
-cho_data = pd.read_csv('data/cho.txt', sep='\t', header=None)
-cho_data = cho_data[cho_data[1] != -1]
+# # cho data
+# cho_data = pd.read_csv('data/cho.txt', sep='\t', header=None)
+# cho_data = cho_data[cho_data[1] != -1]
 
-# split data into training and testing sets
-train_data = cho_data.sample(frac=0.8)
-test_data = cho_data.drop(train_data.index)
+# # split data into training and testing sets
+# train_data = cho_data.sample(frac=0.8)
+# test_data = cho_data.drop(train_data.index)
 
 # train logistic regression and k-fold cross validation on training data to find best hyperparameters
 # solver = 'liblinear' is used for small datasets
