@@ -11,6 +11,7 @@ np.random.seed(42)
 
 # preprocessing data
 # removing rows with outliers (label = -1)
+# Comment out the following code to run the code for Cho data
 iyer_data = pd.read_csv('data/iyer.txt', sep='\t', header=None)
 iyer_data = iyer_data[iyer_data[1] != -1]
 
@@ -18,9 +19,12 @@ iyer_data = iyer_data[iyer_data[1] != -1]
 train_data = iyer_data.sample(frac=0.8)
 test_data = iyer_data.drop(train_data.index)
 
+### Uncommnet the following code to run the code for Cho data
 # # cho data
 # cho_data = pd.read_csv('data/cho.txt', sep='\t', header=None)
 # cho_data = cho_data[cho_data[1] != -1]
+
+##############################################################################################
 
 # # split data into training and testing sets
 # train_data = cho_data.sample(frac=0.8)
